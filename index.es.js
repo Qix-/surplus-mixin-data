@@ -10,6 +10,9 @@ export default function data(signal, arg1, arg2) {
             else if (type === 'RADIO') {
                 radioData(node, signal, on);
             }
+            else if (type === 'NUMBER' || type === 'RANGE') {
+                numberData(node, signal, event);
+            }
             else {
                 valueData(node, signal, event);
             }
@@ -36,6 +39,25 @@ function valueData(node, signal, event) {
     S.cleanup(function () { node.removeEventListener(event, valueListener); });
     function valueListener() {
         var cur = toString(S.sample(signal)), update = node.value;
+        if (cur !== update)
+            signal(update);
+        return true;
+    }
+}
+function numberData(node, signal, event) {
+    S(function updateValue() {
+        var n = Number(signal());
+        if (isNaN(n)) {
+            node.value = '';
+        }
+        else {
+            node.valueAsNumber = n;
+        }
+    });
+    node.addEventListener(event, valueListener, false);
+    S.cleanup(function () { node.removeEventListener(event, valueListener); });
+    function valueListener() {
+        var cur = Number(S.sample(signal)), update = node.valueAsNumber;
         if (cur !== update)
             signal(update);
         return true;

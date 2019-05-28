@@ -12,6 +12,8 @@ export default function data(signal : (v? : any) => any, arg1? : any, arg2? : an
                 checkboxData(node, signal, on, off);
             } else if (type === 'RADIO') {
                 radioData(node, signal, on);
+            } else if (type === 'NUMBER' || type === 'RANGE') {
+                numberData(node, signal, event);
             } else {
                 valueData(node, signal, event);
             }
@@ -39,6 +41,27 @@ function valueData(node : HTMLInputElement | HTMLTextAreaElement | HTMLSelectEle
     function valueListener() {
         var cur = toString(S.sample(signal)),
             update = node.value;
+        if (cur !== update) signal(update as any);
+        return true;
+    }
+}
+
+function numberData(node : HTMLInputElement, signal : (v? : string) => string, event : string) {
+    S(function updateValue() {
+        const n = Number(signal());
+        if (isNaN(n)) {
+            node.value = '';
+        } else {
+            node.valueAsNumber = n;
+        }
+    });
+
+    node.addEventListener(event, valueListener, false);
+    S.cleanup(function () { node.removeEventListener(event, valueListener); });
+
+    function valueListener() {
+        var cur = Number(S.sample(signal)),
+            update = node.valueAsNumber;
         if (cur !== update) signal(update as any);
         return true;
     }
